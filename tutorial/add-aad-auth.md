@@ -10,11 +10,12 @@ namespace GraphTutorial.Models
     public static class OAuthSettings
     {
         public const string ApplicationId = "YOUR_APP_ID_HERE";
-        public const string RedirectUri = "YOUR_REDIRECT_URI_HERE";
         public const string Scopes = "User.Read Calendars.Read";
     }
 }
 ```
+
+Reemplace `YOUR_APP_ID_HERE` por el identificador de la aplicación del registro de la aplicación.
 
 > [!IMPORTANT]
 > Si usa un control de código fuente como GIT, ahora sería un buen momento para excluir el `OAuthSettings.cs` archivo del control de código fuente para evitar la pérdida inadvertida del identificador de la aplicación.
@@ -36,10 +37,13 @@ Agregue las siguientes propiedades a la `App` clase.
 
 ```cs
 // UIParent used by Android version of the app
-public static UIParent AuthUIParent = null;
+public static object AuthUIParent = null;
+
+// Keychain security group used by iOS version of the app
+public static string iOSKeychainSecurityGroup = null;
 
 // Microsoft Authentication client for native/mobile apps
-public static PublicClientApplication PCA;
+public static IPublicClientApplication PCA;
 
 // Microsoft Graph client
 public static GraphServiceClient GraphClient;
@@ -52,7 +56,15 @@ public App()
 {
     InitializeComponent();
 
-    PCA = new PublicClientApplication(OAuthSettings.ApplicationId);
+    var builder = PublicClientApplicationBuilder
+        .Create(OAuthSettings.ApplicationId);
+
+    if (!string.IsNullOrEmpty(iOSKeychainSecurityGroup))
+    {
+        builder = builder.WithIosKeychainSecurityGroup(iOSKeychainSecurityGroup);
+    }
+
+    PCA = builder.Build();
 
     MainPage = new MainPage();
 }
@@ -66,25 +78,44 @@ var scopes = OAuthSettings.Scopes.Split(' ');
 // First, attempt silent sign in
 // If the user's information is already in the app's cache,
 // they won't have to sign in again.
+string accessToken = string.Empty;
 try
 {
     var accounts = await PCA.GetAccountsAsync();
-    var silentAuthResult = await PCA.AcquireTokenSilentAsync(
-        scopes, accounts.FirstOrDefault());
+    if (accounts.Count() > 0)
+    {
+        var silentAuthResult = await PCA
+            .AcquireTokenSilent(scopes, accounts.FirstOrDefault())
+            .ExecuteAsync();
 
-    Debug.WriteLine("User already signed in.");
-    Debug.WriteLine($"Access token: {silentAuthResult.AccessToken}");
+        Debug.WriteLine("User already signed in.");
+        Debug.WriteLine($"Access token: {silentAuthResult.AccessToken}");
+        accessToken = silentAuthResult.AccessToken;
+    }
 }
 catch (MsalUiRequiredException)
 {
     // This exception is thrown when an interactive sign-in is required.
+    Debug.WriteLine("Silent token request failed, user needs to sign-in");
+}
+
+if (string.IsNullOrEmpty(accessToken))
+{
     // Prompt the user to sign-in
-    var authResult = await PCA.AcquireTokenAsync(scopes, AuthUIParent);
+    var interactiveRequest = PCA.AcquireTokenInteractive(scopes);
+
+    if (AuthUIParent != null)
+    {
+        interactiveRequest = interactiveRequest
+            .WithParentActivityOrWindow(AuthUIParent);
+    }
+
+    var authResult = await interactiveRequest.ExecuteAsync();
     Debug.WriteLine($"Access Token: {authResult.AccessToken}");
 }
 ```
 
-Este código primero intenta obtener un token de acceso en modo silencioso. Si la información de un usuario ya se encuentra en la memoria caché de la aplicación (por ejemplo, si el usuario ha cerrado la aplicación anteriormente sin cerrar sesión), esto se realizará correctamente y no hay motivo para preguntar al usuario. Si no hay información de un usuario en la memoria caché, la `AcquireTokenSilentAsync` función inicia una `MsalUiRequiredException`. En este caso, el código llama a la función interactiva para obtener un `AcquireTokenAsync`token,.
+Este código primero intenta obtener un token de acceso en modo silencioso. Si la información de un usuario ya se encuentra en la memoria caché de la aplicación (por ejemplo, si el usuario ha cerrado la aplicación anteriormente sin cerrar sesión), esto se realizará correctamente y no hay motivo para preguntar al usuario. Si no hay información de un usuario en la memoria caché, la `AcquireTokenSilent().ExecuteAsync()` función inicia una `MsalUiRequiredException`. En este caso, el código llama a la función interactiva para obtener un `AcquireTokenInteractive`token,.
 
 Ahora, actualice `SignOut` la función para quitar la información del usuario de la memoria caché. Agregue el código siguiente al principio de la `SignOut` función.
 
@@ -100,33 +131,32 @@ while (accounts.Any())
 }
 ```
 
-Por último, actualice `MainPage` la clase para iniciar sesión cuando se cargue. Agregue la siguiente función a la `MainPage` clase en **mainpage.Xaml.CS**.
-
-```cs
-protected override async void OnAppearing()
-{
-    base.OnAppearing();
-    await (Application.Current as App).SignIn();
-}
-```
-
 ### <a name="update-android-project-to-enable-sign-in"></a>Actualizar el proyecto de Android para habilitar el inicio de sesión
 
 Cuando se usa en un proyecto de Xamarin Android, la biblioteca de autenticación de Microsoft tiene algunos [requisitos específicos de Android](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki/Xamarin-Android-specifics).
 
-En primer lugar, necesita agregar el URI de redireccionamiento desde el registro de la aplicación al manifiesto de Android. Para ello, agregue una actividad nueva al proyecto **GraphTutorial. Android** . Haga clic con el botón derecho en **GraphTutorial. Android** y elija **Agregar**y, a continuación, **nuevo elemento.**... Elija **actividad**, asigne un nombre `MsalActivity`a la actividad y elija **Agregar**.
+En primer lugar, debe actualizar el manifiesto de Android para registrar el URI de redireccionamiento. En el proyecto de **GraphTutorial. Android** , expanda la carpeta **propiedades** y Abra **AndroidManifest. XML**. Si está usando Visual Studio para Mac, cambie a la vista de **origen** mediante las pestañas de la parte inferior del archivo. Reemplace todo el contenido por lo siguiente.
 
-Abra el archivo **MsalActivity.CS** y elimine `[Activity(Label = "MsalActivity")]` la línea y, a continuación, agregue los siguientes atributos sobre la declaración de clase.
-
-```cs
-// This class only exists to create the necessary activity in the Android
-// manifest. Doing it this way allows the value of the RedirectUri constant
-// to be inserted at build.
-[Activity(Name = "microsoft.identity.client.BrowserTabActivity")]
-[IntentFilter(new[] { Intent.ActionView },
-    Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
-    DataScheme = Models.OAuthSettings.RedirectUri, DataHost = "auth")]
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="com.companyname.GraphTutorial">
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="28" />
+    <application android:label="GraphTutorial.Android">
+        <activity android:name="microsoft.identity.client.BrowserTabActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="msalYOUR_APP_ID_HERE" android:host="auth" />
+            </intent-filter>
+        </activity>
+    </application>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
 ```
+
+Reemplace `YOUR_APP_ID_HERE` con el identificador de la aplicación del registro de la aplicación.
 
 A continuación, Abra **MainActivity.CS** y agregue las `using` siguientes instrucciones en la parte superior del archivo.
 
@@ -146,10 +176,16 @@ protected override void OnActivityResult(int requestCode, Result resultCode, Int
 }
 ```
 
+Por último, en `OnCreate` la función, agregue la siguiente línea después `LoadApplication(new App());` de la línea.
+
+```cs
+App.AuthUIParent = this;
+```
+
 ### <a name="update-ios-project-to-enable-sign-in"></a>Actualizar el proyecto de iOS para habilitar el inicio de sesión
 
 > [!IMPORTANT]
-> Como MSAL requiere el uso de un archivo de derechos. plist, debe configurar Visual Studio con su cuenta de desarrollador de Apple para habilitar el aprovisionamiento. Para obtener más información, consulte [aprovisionamiento de dispositivos para Xamarin. iOS](/xamarin/ios/get-started/installation/device-provisioning).
+> Como MSAL requiere el uso de un archivo de derechos. plist, debe configurar Visual Studio con su cuenta de desarrollador de Apple para habilitar el aprovisionamiento. Si ejecuta este tutorial en el simulador de iPhone, debe agregar **derechos. plist** en el campo **derechos personalizados** en la configuración del proyecto de **GraphTutorial. iOS** , la firma del lote de **compilación >iOS**. Para obtener más información, consulte [aprovisionamiento de dispositivos para Xamarin. iOS](/xamarin/ios/get-started/installation/device-provisioning).
 
 Cuando se usa en un proyecto de Xamarin iOS, la biblioteca de autenticación de Microsoft tiene algunos [requisitos específicos de iOS](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki/Xamarin-iOS-specifics).
 
@@ -157,14 +193,14 @@ En primer lugar, debe habilitar el acceso a llaves. En el explorador de solucion
 
 ![Captura de pantalla de la configuración de derechos de llaves](./images/enable-keychain-access.png)
 
-A continuación, debe registrar el URI de redireccionamiento que configuró en el paso de registro de la aplicación como un tipo de dirección URL que controla la aplicación. Abra el archivo **info. plist** y realice los siguientes cambios.
+A continuación, debe registrar el URI de redireccionamiento de MSAL predeterminado como un tipo de dirección URL que la aplicación controla. Abra el archivo **info. plist** y realice los siguientes cambios.
 
 - En la pestaña **aplicación** , compruebe que el valor del **identificador de lote** coincida con el valor que estableció para los grupos de **llaves** en **derechos. plist**. Si no es así, actualícelo ahora.
 - En la ficha **avanzadas** , busque la sección **tipos de URL** . Agregue aquí un tipo de dirección URL con los valores siguientes:
-    - **Identificador**: establezca en el valor del identificador del **lote**
-    - **Esquemas de URL**: establezca el URI de redireccionamiento desde el registro de la aplicación que comienza con`msal`
-    - **Rol**:`Editor`
-    - **Icono**: dejar vacío
+  - **Identificador**: establezca en el valor del identificador del **lote**
+  - **Esquemas de dirección URL**: establezca en `msal{YOUR-APP-ID}`. Por ejemplo, si el identificador de la `67ad5eba-0cfc-414d-8f9f-0a6d973a907c`aplicación es, establecería en `msal67ad5eba-0cfc-414d-8f9f-0a6d973a907c`.
+  - **Rol**:`Editor`
+  - **Icono**: dejar vacío
 
 ![Una captura de pantalla de la sección tipos de URL de info. plist](./images/add-url-type.png)
 
@@ -174,11 +210,11 @@ Por último, actualice el código en el proyecto **GraphTutorial. iOS** para con
 using Microsoft.Identity.Client;
 ```
 
-Agregue la línea siguiente para `FinishedLaunching` que funcione justo antes `return` de la instrucción.
+Agregue la línea siguiente para `FinishedLaunching` que funcione justo antes `LoadApplication(new App());` de la línea.
 
 ```cs
 // Specify the Keychain access group
-App.PCA.iOSKeychainSecurityGroup = "com.graphdevx.GraphTutorial";
+App.iOSKeychainSecurityGroup = NSBundle.MainBundle.BundleIdentifier;
 ```
 
 Por último, reemplace `OpenUrl` la función para pasar la dirección URL a la biblioteca de MSAL. Agregue lo siguiente a la `AppDelegate` clase.
@@ -214,7 +250,8 @@ GraphClient = new GraphServiceClient(new DelegateAuthenticationProvider(
     {
         var accounts = await PCA.GetAccountsAsync();
 
-        var result = await PCA.AcquireTokenSilentAsync(scopes, accounts.FirstOrDefault());
+        var result = await PCA.AcquireTokenSilent(scopes, accounts.FirstOrDefault())
+            .ExecuteAsync();
 
         requestMessage.Headers.Authorization =
             new AuthenticationHeaderValue("Bearer", result.AccessToken);
@@ -236,4 +273,3 @@ private async Task GetUserInfo()
 ```
 
 Si guarda los cambios y ejecuta la aplicación ahora, después de iniciar sesión, la interfaz de usuario se actualizará con el nombre para mostrar y la dirección de correo electrónico del usuario.
-

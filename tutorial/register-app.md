@@ -12,7 +12,7 @@ En este ejercicio, creará una nueva aplicación nativa de Azure AD con el centr
 
     - Establezca **Nombre** como `Xamarin Graph Tutorial`.
     - Establezca **Tipos de cuenta admitidos** en **Cuentas en cualquier directorio de organización y cuentas personales de Microsoft**.
-    - Deje **URI de redireccionamiento** vacía.
+    - En **URI de redireccionamiento (opcional)**, cambie la lista desplegable a **cliente público (móvil & escritorio)** y establezca `urn:ietf:wg:oauth:2.0:oob`el valor en.
 
     ![Captura de pantalla de la página registrar una aplicación](./images/aad-register-an-app.png)
 
@@ -20,6 +20,6 @@ En este ejercicio, creará una nueva aplicación nativa de Azure AD con el centr
 
     ![Captura de pantalla del identificador de la aplicación del nuevo registro de la aplicación](./images/aad-application-id.png)
 
-1. Seleccione el vínculo **Agregar un URI de** redireccionamiento. En la página **URI** de redireccionamiento, busque la sección **URI de redireccionamiento sugeridos para clientes públicos (móvil, escritorio)** . Seleccione el URI que comienza con `msal` **y** el **urn: IETF: WG: OAuth: 2.0:** el URI de OOB. Copie el valor que comienza con `msal`y, a continuación, elija **Guardar**. Guarde el URI de redireccionamiento copiado y lo necesitará en el paso siguiente.
+1. Seleccione la **autenticación** en **administrar**. Busque la sección **de los URI de redireccionamiento sugeridos para clientes públicos (móvil, escritorio)** . Seleccione el URI que comienza con `msal`y, a continuación, elija **Guardar**.
 
     ![Captura de pantalla de la página URI de redireccionamiento](./images/aad-redirect-uris.png)

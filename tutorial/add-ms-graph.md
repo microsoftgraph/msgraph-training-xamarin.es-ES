@@ -60,7 +60,7 @@ Ahora puede ejecutar la aplicación, iniciar sesión y hacer clic en el elemento
 
 ## <a name="display-the-results"></a>Mostrar los resultados
 
-Ahora puede reemplazar el volcado de JSON con algo para mostrar los resultados de forma fácil de uso. Para empezar, cree un [convertidor de valores de enlace](/xamarin/xamarin-forms/xaml/xaml-basics/data-binding-basics#binding-value-converters) para convertir los valores de [dateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) devueltos por Microsoft Graph en los formatos de fecha y hora que el usuario espera. Haga clic con el botón derecho en la carpeta **modelos** en el proyecto **GraphTutorial** y elija **nuevo**, a continuación, **clase...**. Asigne un nombre `GraphDateTimeTimeZoneConverter` a la clase y elija **Agregar**. Reemplace todo el contenido del archivo por lo siguiente.
+Ahora puede reemplazar el volcado de JSON con algo para mostrar los resultados de forma fácil de uso. Para empezar, cree un [convertidor de valores de enlace](/xamarin/xamarin-forms/xaml/xaml-basics/data-binding-basics#binding-value-converters) para convertir los valores de [dateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) devueltos por Microsoft Graph en los formatos de fecha y hora que el usuario espera. Haga clic con el botón derecho en la carpeta **modelos** en el proyecto **GraphTutorial** y elija **Agregar**y, a continuación, **clase...**. Asigne un nombre `GraphDateTimeTimeZoneConverter` a la clase y elija **Agregar**. Reemplace todo el contenido del archivo por lo siguiente.
 
 ```cs
 using Microsoft.Graph;
@@ -115,7 +115,7 @@ A continuación, reemplace todo el contenido `CalendarPage.xaml` de con lo sigui
     <ContentPage.Content>
         <StackLayout>
             <ListView x:Name="CalendarList"
-                      VerticalOptions="StartAndExpand"
+                      HasUnevenRows="true"
                       Margin="10,10,10,10">
                 <ListView.ItemTemplate>
                     <DataTemplate>

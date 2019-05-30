@@ -1,33 +1,32 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-Abra Visual Studio y seleccione **archivo _GT_ nuevo _GT_ proyecto**. En el cuadro de diálogo **nuevo proyecto** , haga lo siguiente:
+Abra Visual Studio y seleccione **crear un nuevo proyecto**. En el cuadro de diálogo **crear un nuevo proyecto** , elija **aplicación móvil (Xamarin. Forms)** y, a continuación, elija **siguiente**.
 
-1. Seleccione **Visual C# _GT_ Cross-Platform**.
-1. Seleccione **aplicación móvil (Xamarin. Forms)**.
-1. Escriba **GraphTutorial** para el nombre del proyecto.
+![Cuadro de diálogo Crear nuevo proyecto de Visual Studio 2019](images/new-project-dialog.png)
 
-![Cuadro de diálogo Crear nuevo proyecto de Visual Studio 2017](images/new-project-dialog.png)
+En el cuadro de diálogo **configurar un nuevo proyecto** `GraphTutorial` , escriba para el nombre del **proyecto** y el nombre de la **solución**y, después, elija **crear**.
 
 > [!IMPORTANT]
 > Asegúrese de que escribe exactamente el mismo nombre para el proyecto de Visual Studio que se especifica en estas instrucciones de la práctica. El nombre del proyecto de Visual Studio se convierte en parte del espacio de nombres en el código. El código incluido en estas instrucciones depende del espacio de nombres que coincida con el nombre de proyecto de Visual Studio especificado en estas instrucciones. Si usa un nombre de proyecto diferente, el código no se compilará a menos que ajuste todos los espacios de nombres para que se correspondan con el nombre del proyecto de Visual Studio que ha especificado al crear el proyecto.
 
-Haga clic en **Aceptar**. En el cuadro de diálogo **nueva aplicación para varias plataformas** , seleccione la plantilla **en blanco** y asegúrese de que la selección de la **estrategia uso compartido de código** sea **.net Standard**. Si tiene previsto omitir una plataforma específica, puede anular la selección ahora en **plataformas**. Seleccione **Aceptar** para crear la solución.
+![Cuadro de diálogo Configurar nuevo proyecto de Visual Studio 2019](images/configure-new-project-dialog.png)
 
-![Visual Studio 2017 cuadro de diálogo Nueva aplicación para varias plataformas](images/new-cross-platform-app-dialog.png)
+En el cuadro de diálogo **nueva aplicación para varias plataformas** , seleccione la plantilla **en blanco** y, a continuación, seleccione las plataformas que desea crear en **plataformas**. Seleccione **Aceptar** para crear la solución.
+
+![Visual Studio 2019 cuadro de diálogo Nueva aplicación para varias plataformas](images/new-cross-platform-app-dialog.png)
 
 Antes de continuar, instale algunos paquetes NuGet adicionales que usará más adelante.
 
 - [Microsoft. Identity. Client](https://www.nuget.org/packages/Microsoft.Identity.Client/) para administrar la autenticación y la administración de tokens de Azure ad.
 - [Microsoft. Graph](https://www.nuget.org/packages/Microsoft.Graph/) para realizar llamadas a Microsoft Graph.
 
-Seleccione **herramientas > el administrador de paquetes de NuGet _GT_ la consola del administrador de paquetes**. En la consola del administrador de paquetes, escriba los siguientes comandos.
+Seleccione **herramientas > el administrador de paquetes de NuGet > la consola del administrador de paquetes**. En la consola del administrador de paquetes, escriba los siguientes comandos.
 
 ```Powershell
-Install-Package Microsoft.Identity.Client -Version 2.7.0 -Project GraphTutorial
-Install-Package Xamarin.Android.Support.Compat -Version 27.0.2.1 -Project GraphTutorial.Android
-Install-Package Microsoft.Identity.Client -Version 2.7.0 -Project GraphTutorial.Android
-Install-Package Microsoft.Identity.Client -Version 2.7.0 -Project GraphTutorial.iOS
-Install-Package Microsoft.Graph -Version 1.12.0 -Project GraphTutorial
+Install-Package Microsoft.Identity.Client -Version 3.0.8 -Project GraphTutorial
+Install-Package Microsoft.Identity.Client -Version 3.0.8 -Project GraphTutorial.Android
+Install-Package Microsoft.Identity.Client -Version 3.0.8 -Project GraphTutorial.iOS
+Install-Package Microsoft.Graph -Version 1.15.0 -Project GraphTutorial
 ```
 
 ## <a name="design-the-app"></a>Diseñar la aplicación
@@ -275,7 +274,7 @@ namespace GraphTutorial
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class MenuPage : ContentPage
     {
-        MainPage RootPage { get => Application.Current.MainPage as MainPage; }
+        MainPage RootPage => Application.Current.MainPage as MainPage;
         List<NavMenuItem> menuItems;
 
         public MenuPage ()
@@ -321,6 +320,9 @@ namespace GraphTutorial
     }
 }
 ```
+
+> [!NOTE]
+> Visual Studio generará un informe de errores en **MenuPage.Xaml.CS**. Estos errores se resolverán en un paso posterior.
 
 #### <a name="implement-the-welcome-page"></a>Implementar la página de bienvenida
 
@@ -384,7 +386,7 @@ Deje la página agregada como está por ahora.
 
 #### <a name="update-mainpage-code-behind"></a>Actualizar código subyacente de la MainPage
 
-Ahora que todas las páginas están en su ubicación, actualiza el código subyacente para **mainpage. Xaml**. ExPanda **mainpage. Xaml** en el **Explorador de soluciones** y abra el archivo **mainpage.Xaml.CS** y reemplace todo el contenido por lo siguiente.
+Ahora que todas las páginas están en su ubicación, actualiza el código subyacente para **mainpage. Xaml**. Expanda **mainpage. Xaml** en el **Explorador de soluciones** y abra el archivo **mainpage.Xaml.CS** y reemplace todo el contenido por lo siguiente.
 
 ```cs
 using System;
