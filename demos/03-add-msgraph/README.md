@@ -29,7 +29,7 @@ Si no tiene una cuenta de Microsoft, hay un par de opciones para obtener una cue
 
     ![Captura de pantalla del identificador de la aplicación del nuevo registro de la aplicación](../../tutorial/images/aad-application-id.png)
 
-1. Seleccione el vínculo **Agregar un URI de** redireccionamiento. En la página **URI** de redireccionamiento, busque la sección **URI de redireccionamiento sugeridos para clientes públicos (móvil, escritorio)** . Seleccione el URI que comienza con `msal` **y** el **urn: IETF: WG: OAuth: 2.0:** el URI de OOB. Copie el valor que comienza con `msal`y, a continuación, elija **Guardar**. Guarde el URI de redireccionamiento copiado y lo necesitará en el paso siguiente.
+1. Seleccione el vínculo **Agregar un URI de redireccionamiento** . En la página **URI de redireccionamiento** , busque la sección **URI de redireccionamiento sugeridos para clientes públicos (móvil, escritorio)** . Seleccione el URI que comienza con `msal` **y** el **urn: IETF: WG: OAuth: 2.0:** el URI de OOB. Copie el valor que comienza con `msal`y, a continuación, elija **Guardar**. Guarde el URI de redireccionamiento copiado y lo necesitará en el paso siguiente.
 
     ![Captura de pantalla de la página URI de redireccionamiento](../../tutorial/images/aad-redirect-uris.png)
 
@@ -38,10 +38,11 @@ Si no tiene una cuenta de Microsoft, hay un par de opciones para obtener una cue
 1. Cambie el nombre `./GraphTutorial/GraphTutorial/Models/OAuthSettings.cs.example` del archivo `OAuthSettings.cs`a.
 1. Edite `OAuthSettings.cs` el archivo y realice los cambios siguientes.
     1. Reemplace `YOUR_APP_ID_HERE` por el **identificador de aplicación** que obtuvo desde el portal de Azure.
-    1. Reemplace `YOUR_REDIRECT_URI_HERE` por el URI de redireccionamiento que `msal` comienza con el que obtuvo desde el portal de Azure.
 1. En el proyecto **GraphTutorial. iOS** , abra el `Info.plist` archivo.
-    1. En la ficha **avanzadas** , busque la sección **tipos de URL** . Cambie la **** entrada de esquemas `YOUR_REDIRECT_URI_HERE` de URL a la URI de redireccionamiento desde el registro `msal`de la aplicación que comienza con.
+    1. En la ficha **avanzadas** , busque la sección **tipos de URL** . En el valor **esquemas** de URL `YOUR_APP_ID_HERE` , reemplace por el **identificador de aplicación** que obtuvo desde el portal de Azure.
+1. En el proyecto **GraphTutorial. Android** , abra el `Properties/AndroidManifest.xml` archivo.
+    1. Reemplace `YOUR_APP_ID_HERE` por el **identificador de aplicación** que obtuvo desde el portal de Azure.
 
 ## <a name="run-the-sample"></a>Ejecutar el ejemplo
 
-En Visual Studio, presione **F5** o elija **depurar _GT_ iniciar**depuración.
+En Visual Studio, presione **F5** o elija **depurar > iniciar depuración**.

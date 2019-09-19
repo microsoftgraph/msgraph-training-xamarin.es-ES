@@ -7,6 +7,7 @@ La versión del proyecto en este directorio refleja cómo completar el tutorial 
 > 1. Cambie el nombre `./GraphTutorial/GraphTutorial/Models/OAuthSettings.cs.example` del archivo `OAuthSettings.cs`a.
 > 1. Edite `OAuthSettings.cs` el archivo y realice los cambios siguientes.
 >     1. Reemplace `YOUR_APP_ID_HERE` por el **identificador de aplicación** que obtuvo desde el portal de Azure.
->     1. Reemplace `YOUR_REDIRECT_URI_HERE` por el URI de redireccionamiento que `msal` comienza con el que obtuvo desde el portal de Azure.
 > 1. En el proyecto **GraphTutorial. iOS** , abra el `Info.plist` archivo.
->     1. En la ficha **avanzadas** , busque la sección **tipos de URL** . Cambie la **** entrada de esquemas `YOUR_REDIRECT_URI_HERE` de URL a la URI de redireccionamiento desde el registro `msal`de la aplicación que comienza con.
+>    1. En la ficha **avanzadas** , busque la sección **tipos de URL** . En el valor **esquemas** de URL `YOUR_APP_ID_HERE` , reemplace por el **identificador de aplicación** que obtuvo desde el portal de Azure.
+> 1. En el proyecto **GraphTutorial. Android** , abra el `Properties/AndroidManifest.xml` archivo.
+>     1. Reemplace `YOUR_APP_ID_HERE` por el **identificador de aplicación** que obtuvo desde el portal de Azure.
