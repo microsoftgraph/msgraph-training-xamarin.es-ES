@@ -23,10 +23,10 @@ Antes de continuar, instale algunos paquetes NuGet adicionales que usará más a
 Seleccione **herramientas > el administrador de paquetes de NuGet > consola del administrador de paquetes**. En la consola del administrador de paquetes, escriba los siguientes comandos.
 
 ```Powershell
-Install-Package Microsoft.Identity.Client -Version 3.0.8 -Project GraphTutorial
-Install-Package Microsoft.Identity.Client -Version 3.0.8 -Project GraphTutorial.Android
-Install-Package Microsoft.Identity.Client -Version 3.0.8 -Project GraphTutorial.iOS
-Install-Package Microsoft.Graph -Version 1.15.0 -Project GraphTutorial
+Install-Package Microsoft.Identity.Client -Version 4.7.1 -Project GraphTutorial
+Install-Package Microsoft.Identity.Client -Version 4.7.1 -Project GraphTutorial.Android
+Install-Package Microsoft.Identity.Client -Version 4.7.1 -Project GraphTutorial.iOS
+Install-Package Microsoft.Graph -Version 1.20.0 -Project GraphTutorial
 ```
 
 ## <a name="design-the-app"></a>Diseñar la aplicación
@@ -447,6 +447,6 @@ namespace GraphTutorial
 }
 ```
 
-Guarde todos los cambios. Haz clic con el botón derecho en el proyecto que quieras ejecutar (Android, iOS o UWP) y selecciona **establecer como proyecto de inicio**. Presione **F5** o seleccione **depurar > iniciar** depuración en Visual Studio.
+Guarde todos los cambios. Haz clic con el botón derecho en el proyecto que quieras ejecutar (Android, iOS o UWP) y selecciona **establecer como proyecto de inicio**. Presione **F5** o seleccione **depurar > iniciar depuración** en Visual Studio.
 
 ![Capturas de pantallas de las versiones de Android, iOS y UWP de la aplicación](./images/welcome-page.png)
