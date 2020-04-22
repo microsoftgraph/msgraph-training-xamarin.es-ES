@@ -4,160 +4,98 @@ En este ejercicio, incorporará Microsoft Graph a la aplicación. Para esta apli
 
 ## <a name="get-calendar-events-from-outlook"></a>Obtener eventos de calendario de Outlook
 
-Para empezar, actualice el archivo **CalendarPage. Xaml** en el proyecto **GraphTutorial** . Abra el archivo y reemplace el contenido por lo siguiente.
+1. Abra **CalendarPage. Xaml** en el proyecto **GraphTutorial** y reemplace su contenido por lo siguiente.
 
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             Title="Calendar"
-             x:Class="GraphTutorial.CalendarPage">
-    <ContentPage.Content>
-        <StackLayout>
-            <Editor x:Name="JSONResponse"
-                    IsSpellCheckEnabled="False"
-                    HorizontalOptions="FillAndExpand"
-                    VerticalOptions="FillAndExpand"/>
-        </StackLayout>
-    </ContentPage.Content>
-</ContentPage>
-```
+    ```xaml
+    <?xml version="1.0" encoding="utf-8" ?>
+    <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                 Title="Calendar"
+                 x:Class="GraphTutorial.CalendarPage">
+        <ContentPage.Content>
+            <StackLayout>
+                <Editor x:Name="JSONResponse"
+                        IsSpellCheckEnabled="False"
+                        HorizontalOptions="FillAndExpand"
+                        VerticalOptions="FillAndExpand"/>
+            </StackLayout>
+        </ContentPage.Content>
+    </ContentPage>
+    ```
 
-Abra `CalendarPage.xaml.cs` y agregue las siguientes `using` instrucciones en la parte superior del archivo.
+1. Abra **CalendarPage.Xaml.CS** y agregue las siguientes `using` instrucciones en la parte superior del archivo.
 
-```cs
-using Newtonsoft.Json;
-using Microsoft.Graph;
-using System.ComponentModel;
-using System.Collections.ObjectModel;
-```
+    ```csharp
+    using Microsoft.Graph;
+    using Newtonsoft.Json;
+    using System.Collections.ObjectModel;
+    using System.ComponentModel;
+    ```
 
-A continuación, agregue el siguiente código para obtener los eventos del usuario y mostrar la respuesta JSON.
+1. Agregue la siguiente función a la `CalendarPage` clase para obtener los eventos del usuario y mostrar la respuesta de JSON.
 
-```cs
-protected override async void OnAppearing()
-{
-    base.OnAppearing();
+    ```csharp
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
 
-    // Get the events
-    var events = await App.GraphClient.Me.Events.Request()
-        .Select("subject,organizer,start,end")
-        .OrderBy("createdDateTime DESC")
-        .GetAsync();
+        // Get the events
+        var events = await App.GraphClient.Me.Events.Request()
+            .Select(e => new
+            {
+                e.Subject,
+                e.Organizer,
+                e.Start,
+                e.End
+            })
+            .OrderBy("createdDateTime DESC")
+            .GetAsync();
 
-    // Temporary
-    JSONResponse.Text = JsonConvert.SerializeObject(events.CurrentPage, Formatting.Indented);
-}
-```
+        // Temporary
+        JSONResponse.Text = JsonConvert.SerializeObject(events.CurrentPage, Formatting.Indented);
+    }
+    ```
 
-Tenga en cuenta lo que `OnAppearing` hace el código.
+    Tenga en cuenta lo que `OnAppearing` hace el código.
 
-- La dirección URL a la que se `/v1.0/me/events`llamará es.
-- La `Select` función limita los campos devueltos para cada evento a solo aquellos que la vista usará realmente.
-- La `OrderBy` función ordena los resultados por la fecha y hora en que se crearon, con el elemento más reciente en primer lugar.
+    - La dirección URL a la que se `/v1.0/me/events`llamará es.
+    - La `Select` función limita los campos devueltos para cada evento a solo aquellos que la vista usará realmente.
+    - La `OrderBy` función ordena los resultados por la fecha y hora en que se crearon, con el elemento más reciente en primer lugar.
 
-Ahora puede ejecutar la aplicación, iniciar sesión y hacer clic en el elemento de navegación **calendario** en el menú. Debería ver un volcado JSON de los eventos en el calendario del usuario.
+1. Ejecute la aplicación, inicie sesión y haga clic en el elemento de navegación **calendario** en el menú. Debería ver un volcado JSON de los eventos en el calendario del usuario.
 
 ## <a name="display-the-results"></a>Mostrar los resultados
 
-Ahora puede reemplazar el volcado de JSON con algo para mostrar los resultados de forma fácil de uso. Para empezar, cree un [convertidor de valores de enlace](/xamarin/xamarin-forms/xaml/xaml-basics/data-binding-basics#binding-value-converters) para convertir los valores de [dateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) devueltos por Microsoft Graph en los formatos de fecha y hora que el usuario espera. Haga clic con el botón derecho en la carpeta **modelos** en el proyecto **GraphTutorial** y seleccione **Agregar**y, a continuación, **clase...**. Asigne un nombre `GraphDateTimeTimeZoneConverter` a la clase y seleccione **Agregar**. Reemplace todo el contenido del archivo por lo siguiente.
+Ahora puede reemplazar el volcado de JSON con algo para mostrar los resultados de forma fácil de uso.
 
-```cs
-using Microsoft.Graph;
-using System;
-using System.Globalization;
-using Xamarin.Forms;
+Para empezar, cree un [convertidor de valores de enlace](/xamarin/xamarin-forms/xaml/xaml-basics/data-binding-basics#binding-value-converters) para convertir los valores de [dateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) devueltos por Microsoft Graph en los formatos de fecha y hora que el usuario espera.
 
-namespace GraphTutorial.Models
-{
-    class GraphDateTimeTimeZoneConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is DateTimeTimeZone date)
-            {
-                // Resolve the time zone
-                var timezone = TimeZoneInfo.FindSystemTimeZoneById(date.TimeZone);
-                // Parse method assumes local time, which may not be the case
-                var parsedDateAsLocal = DateTimeOffset.Parse(date.DateTime);
-                // Determine the offset from UTC time for the specific date
-                // Making this call adjusts for DST as appropriate
-                var tzOffset = timezone.GetUtcOffset(parsedDateAsLocal.DateTime);
-                // Create a new DateTimeOffset with the specific offset from UTC
-                var correctedDate = new DateTimeOffset(parsedDateAsLocal.DateTime, tzOffset);
-                // Return the local date time string
-                return $"{correctedDate.LocalDateTime.ToShortDateString()} {correctedDate.LocalDateTime.ToShortTimeString()}";
-            }
+1. Haga clic con el botón derecho en la carpeta **modelos** en el proyecto **GraphTutorial** y seleccione **Agregar**y, a continuación, **clase...**. Asigne un nombre `GraphDateTimeTimeZoneConverter` a la clase y seleccione **Agregar**.
 
-            return string.Empty;
-        }
+1. Reemplace todo el contenido del archivo por lo siguiente.
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-}
-```
+    :::code language="csharp" source="../demo/GraphTutorial/GraphTutorial/Models/GraphDateTimeTimeZoneConverter.cs" id="DateTimeConverterSnippet":::
 
-A continuación, reemplace todo el contenido `CalendarPage.xaml` de con lo siguiente.
+1. Reemplace todo el contenido de **CalendarPage. Xaml** por lo siguiente.
 
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:GraphTutorial.Models"
-             Title="Calendar"
-             x:Class="GraphTutorial.CalendarPage">
-    <ContentPage.Resources>
-        <local:GraphDateTimeTimeZoneConverter x:Key="DateConverter" />
-    </ContentPage.Resources>
-    <ContentPage.Content>
-        <StackLayout>
-            <ListView x:Name="CalendarList"
-                      HasUnevenRows="true"
-                      Margin="10,10,10,10">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <ViewCell>
-                            <StackLayout Margin="10,10,10,10">
-                                <Label Text="{Binding Path=Subject}"
-                                       FontAttributes="Bold"
-                                       FontSize="Medium" />
-                                <Label Text="{Binding Path=Organizer.EmailAddress.Name}"
-                                       FontSize="Small" />
-                                <StackLayout Orientation="Horizontal">
-                                    <Label Text="{Binding Path=Start, Converter={StaticResource DateConverter}}"
-                                       FontSize="Micro" />
-                                    <Label Text="to"
-                                           FontSize="Micro" />
-                                    <Label Text="{Binding Path=End, Converter={StaticResource DateConverter}}"
-                                       FontSize="Micro" />
-                                </StackLayout>
-                            </StackLayout>
-                        </ViewCell>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </StackLayout>
-    </ContentPage.Content>
-</ContentPage>
-```
+    :::code language="xaml" source="../demo/GraphTutorial/GraphTutorial/CalendarPage.xaml":::
 
-Esto reemplaza `Editor` por un `ListView`. El `DataTemplate` que se usa para representar cada elemento `GraphDateTimeTimeZoneConverter` utiliza el para `Start` convertir `End` las propiedades y del evento en una cadena. Ahora, `CalendarPage.xaml.cs` abra y quite las siguientes líneas de `OnAppearing` la función.
+    Esto reemplaza `Editor` por un `ListView`. El `DataTemplate` que se usa para representar cada elemento `GraphDateTimeTimeZoneConverter` utiliza el para `Start` convertir `End` las propiedades y del evento en una cadena.
 
-```cs
-// Temporary
-JSONResponse.Text = JsonConvert.SerializeObject(events.CurrentPage, Formatting.Indented);
-```
+1. Abra **CalendarPage.Xaml.CS** y quite las siguientes líneas de la `OnAppearing` función.
 
-En su ubicación, agregue el siguiente código.
+    ```csharp
+    // Temporary
+    JSONResponse.Text = JsonConvert.SerializeObject(events.CurrentPage, Formatting.Indented);
+    ```
 
-```cs
-// Add the events to the list view
-CalendarList.ItemsSource = events.CurrentPage.ToList();
-```
+1. En su ubicación, agregue el siguiente código.
 
-Ejecute la aplicación, inicie sesión y haga clic en el elemento de navegación **calendario** . Debe ver la lista de eventos con los valores de **Inicio** y **finalización** con formato.
+    ```csharp
+    // Add the events to the list view
+    CalendarList.ItemsSource = events.CurrentPage.ToList();
+    ```
 
-![Captura de pantalla de la tabla de eventos](./images/calendar-page.png)
+1. Ejecute la aplicación, inicie sesión y haga clic en el elemento de navegación **calendario** . Debe ver la lista de eventos con los valores de **Inicio** y **finalización** con formato.
+
+    ![Captura de pantalla de la tabla de eventos](./images/calendar-page.png)
