@@ -32,6 +32,10 @@ En este ejercicio incorporará Microsoft Graph en la aplicación. Para esta apli
     using System.ComponentModel;
     ```
 
+1. Agregue la siguiente función a la `CalendarPage` clase para obtener el inicio de la semana actual en la zona horaria del usuario.
+
+    :::code language="csharp" source="../demo/GraphTutorial/GraphTutorial/CalendarPage.xaml.cs" id="GetStartOfWeekSnippet":::
+
 1. Agregue la siguiente función a la clase para obtener los eventos del usuario `CalendarPage` y mostrar la respuesta JSON.
 
     ```csharp
@@ -95,7 +99,7 @@ Empiece por crear un convertidor de valores [de](/xamarin/xamarin-forms/xaml/xam
 
     :::code language="xaml" source="../demo/GraphTutorial/GraphTutorial/CalendarPage.xaml" id="CalendarPageXamlSnippet":::
 
-    Esto reemplaza el `Editor` con un `ListView` archivo . El `DataTemplate` usado para representar cada elemento usa el para convertir las propiedades y del evento en una `GraphDateTimeTimeZoneConverter` `Start` `End` cadena.
+    Esto reemplaza el `Editor` archivo con un archivo `ListView` . El `DataTemplate` usado para representar cada elemento usa el para convertir las propiedades y del evento en una `GraphDateTimeTimeZoneConverter` `Start` `End` cadena.
 
 1. Abra **CalendarPage.xaml.cs** y quite las siguientes líneas de la `OnAppearing` función.
 
